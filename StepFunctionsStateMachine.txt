@@ -1,0 +1,35 @@
+{
+  "Comment": "Image resize workflow",
+  "StartAt": "InvokeResizer",
+  "States": {
+    "InvokeResizer": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:useast-1:340914758420:function:ImageResizerFunction",
+        "Payload.$": "$"
+      },
+      "ResultPath": "$.resizerResult",
+      "Next": "CheckResult"
+    },
+    "CheckResult": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.resizerResult.Payload.status",
+          "StringEquals": "SUCCESS",
+          "Next": "SucceededState"
+        }
+      ],
+      "Default": "FailedState"
+    },
+    "SucceededState": {
+      "Type": "Succeed"
+    },
+    "FailedState": {
+      "Type": "Fail",
+      "Error": "ResizeFailed",
+      "Cause": "Resizer returned failure"
+    }
+  }
+}
